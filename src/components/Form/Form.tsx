@@ -15,6 +15,7 @@ const FeedbackForm: React.FC = () => {
     // /. hooks
 
     const onFinish = (values: any) => {
+        form.resetFields();
         console.log('Received values of form: ', values);
     };
 
@@ -29,14 +30,33 @@ const FeedbackForm: React.FC = () => {
         }
     };
 
+    const phoneConfigarations = {
+        ru: {
+            prefix: '+7',
+            placeholder: '(926) 777-77-77',
+            lengths: { min: 1, max: 13 },
+            pattern: /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m
+        },
+        du: {
+            prefix: '+49',
+            placeholder: '160-5556-417',
+            lengths: { min: 1, max: 12 },
+            pattern: /([1-9][0-9]{2})[-][0-9]{4}[-][0-9]{3}$/m
+        }
+    };
+
     const prefixSelector = (
         <Form.Item
             name="prefix"
             noStyle
         >
             <Select style={{ width: 70 }}>
-                <Option value="7">+7</Option>
-                <Option value="87">+87</Option>
+                <Option value={phoneConfigarations.ru.prefix}>
+                    {phoneConfigarations.ru.prefix}
+                </Option>
+                <Option value={phoneConfigarations.du.prefix}>
+                    {phoneConfigarations.ru.prefix}
+                </Option>
             </Select>
         </Form.Item>
     );
@@ -49,7 +69,7 @@ const FeedbackForm: React.FC = () => {
             name="feedback"
             onFinish={onFinish}
             initialValues={{
-                prefix: '7'
+                prefix: phoneConfigarations.ru.prefix
             }}
             scrollToFirstError
         >
@@ -74,13 +94,15 @@ const FeedbackForm: React.FC = () => {
                 rules={[
                     {
                         required: true,
-                        message: 'Please input your phone number!'
+                        message: 'must be a valid phone number!',
+                        pattern: phoneConfigarations.ru.pattern
                     }
                 ]}
             >
                 <Input
                     addonBefore={prefixSelector}
                     style={{ width: '100%' }}
+                    placeholder={phoneConfigarations.ru.placeholder}
                 />
             </Form.Item>
 
