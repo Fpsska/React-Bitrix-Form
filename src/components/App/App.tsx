@@ -1,5 +1,7 @@
 import React from 'react';
 
+import FeedbackForm from '../Form/Form';
+
 import './App.css';
 import '../../assets/styles/_reset.scss';
 import '../../assets/styles/style.scss';
@@ -9,7 +11,13 @@ import '../../assets/styles/style.scss';
 const App: React.FC = () => {
     return (
         <div className="App">
-            <h1 style={{ color: '#000' }}>Hello world</h1>
+            <header className="header"></header>
+            <main className="main">
+                <div className="container">
+                    <FeedbackForm />
+                </div>
+            </main>
+            <footer className="footer"></footer>
         </div>
     );
 };
