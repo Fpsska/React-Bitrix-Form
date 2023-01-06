@@ -1,25 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Button, Form, Input, Select } from 'antd';
 import { Col, Row } from 'antd/es/grid';
+
+import { Iphone, Ilayout } from '../../Types/formTypes';
 
 import './form.scss';
 
 // /. imports
 
 const FeedbackForm: React.FC = () => {
+    const [lang, setLang] = useState<string>('ru');
+
     const [form] = Form.useForm();
 
     const { Option } = Select;
 
     // /. hooks
 
-    const onFinish = (values: any) => {
+    const onFinish = (values: any): void => {
         form.resetFields();
         console.log('Received values of form: ', values);
     };
 
-    const formItemLayout = {
+    const formItemLayout: Ilayout = {
         labelCol: {
             xs: { span: 12 },
             sm: { span: 5 }
@@ -30,12 +34,14 @@ const FeedbackForm: React.FC = () => {
         }
     };
 
-    const phoneConfigarations = {
+    const phoneConfigurations: Iphone = {
         ru: {
             prefix: '+7',
             placeholder: '(926) 777-77-77',
-            lengths: { min: 1, max: 13 },
-            pattern: /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m
+            rules: {
+                lengths: { min: 1, max: 13 },
+                pattern: /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m
+            }
         },
         du: {
             prefix: '+49',
@@ -45,21 +51,41 @@ const FeedbackForm: React.FC = () => {
         }
     };
 
+    const onPhoneSelectChange = (phonePrefix: any): void => {
+        switch (phonePrefix) {
+            case '+7':
+                setLang('ru');
+                break;
+            case '+49':
+                setLang('du');
+                break;
+            default:
+                setLang('ru');
+        }
+    };
+
     const prefixSelector = (
         <Form.Item
             name="prefix"
             noStyle
         >
-            <Select style={{ width: 70 }}>
-                <Option value={phoneConfigarations.ru.prefix}>
-                    {phoneConfigarations.ru.prefix}
+            <Select
+                style={{ width: 70 }}
+                onChange={value => onPhoneSelectChange(value)}
+            >
+                <Option value={phoneConfigurations.ru.prefix}>
+                    {phoneConfigurations.ru.prefix}
                 </Option>
-                <Option value={phoneConfigarations.du.prefix}>
-                    {phoneConfigarations.ru.prefix}
+                <Option value={phoneConfigurations.du.prefix}>
+                    {phoneConfigurations.du.prefix}
                 </Option>
             </Select>
         </Form.Item>
     );
+
+    // /. functions
+
+    //. effects
 
     return (
         <Form
@@ -69,7 +95,7 @@ const FeedbackForm: React.FC = () => {
             name="feedback"
             onFinish={onFinish}
             initialValues={{
-                prefix: phoneConfigarations.ru.prefix
+                prefix: phoneConfigurations[lang].prefix
             }}
             scrollToFirstError
         >
@@ -95,14 +121,14 @@ const FeedbackForm: React.FC = () => {
                     {
                         required: true,
                         message: 'must be a valid phone number!',
-                        pattern: phoneConfigarations.ru.pattern
+                        pattern: phoneConfigurations[lang].pattern
                     }
                 ]}
             >
                 <Input
                     addonBefore={prefixSelector}
                     style={{ width: '100%' }}
-                    placeholder={phoneConfigarations.ru.placeholder}
+                    placeholder={phoneConfigurations[lang].placeholder}
                 />
             </Form.Item>
 
