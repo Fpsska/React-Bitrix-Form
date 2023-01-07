@@ -1,6 +1,12 @@
+interface Irule {
+    [key: string]: string | number | boolean | RegExp;
+}
+
 export interface Iphone {
     [key: string]: {
-        [key: string]: string | { [key: string]: number } | any;
+        prefix: string;
+        placeholder: string;
+        rules: Irule[];
     };
 }
 

@@ -38,20 +38,34 @@ const FeedbackForm: React.FC = () => {
         ru: {
             prefix: '+7',
             placeholder: '(926) 777-77-77',
-            rules: {
-                lengths: { min: 1, max: 13 },
-                pattern: /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m
-            }
+            rules: [
+                { required: true, message: 'Please input your phone number!' },
+                {
+                    pattern:
+                        /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m,
+                    message: 'number is not valid!'
+                },
+                { min: 1, message: 'must be minimum 1 characters' },
+                { max: 15, message: 'must be less than 15 characters' }
+            ]
         },
         du: {
             prefix: '+49',
             placeholder: '160-5556-417',
-            lengths: { min: 1, max: 12 },
-            pattern: /([1-9][0-9]{2})[-][0-9]{4}[-][0-9]{3}$/m
+            rules: [
+                { required: true, message: 'Please input your phone number!' },
+                {
+                    pattern: /([1-9][0-9]{2})[-][0-9]{4}[-][0-9]{3}$/m,
+                    message: 'number is not valid!'
+                },
+                { min: 1, message: 'must be minimum 1 characters' },
+                { max: 12, message: 'must be less than 12 characters' }
+            ]
         }
     };
 
-    const onPhoneSelectChange = (phonePrefix: any): void => {
+    const onPhoneSelectChange = (phonePrefix: string): void => {
+        form.resetFields(['phone']);
         switch (phonePrefix) {
             case '+7':
                 setLang('ru');
@@ -85,8 +99,6 @@ const FeedbackForm: React.FC = () => {
 
     // /. functions
 
-    //. effects
-
     return (
         <Form
             className="form"
@@ -117,13 +129,7 @@ const FeedbackForm: React.FC = () => {
             <Form.Item
                 name="phone"
                 label="Phone Number"
-                rules={[
-                    {
-                        required: true,
-                        message: 'must be a valid phone number!',
-                        pattern: phoneConfigurations[lang].pattern
-                    }
-                ]}
+                rules={phoneConfigurations[lang].rules}
             >
                 <Input
                     addonBefore={prefixSelector}
