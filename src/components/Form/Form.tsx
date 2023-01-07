@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 
-import { Button, Form, Input, Select } from 'antd';
+import { Button, Form, Input, Select, message } from 'antd';
 import { Col, Row } from 'antd/es/grid';
 
 import { Iphone, Ilayout } from '../../Types/formTypes';
+
+import { getFormattedPhoneNumber } from '../../helpers/getFormattedPhoneNumber';
 
 import './form.scss';
 
@@ -11,17 +13,14 @@ import './form.scss';
 
 const FeedbackForm: React.FC = () => {
     const [lang, setLang] = useState<string>('ru');
+    const [isLoading, setLoadingStatus] = useState<boolean>(false);
 
     const [form] = Form.useForm();
+    const [messageApi, contextHolder] = message.useMessage();
 
     const { Option } = Select;
 
     // /. hooks
-
-    const onFinish = (values: any): void => {
-        form.resetFields();
-        console.log('Received values of form: ', values);
-    };
 
     const formItemLayout: Ilayout = {
         labelCol: {
@@ -38,11 +37,14 @@ const FeedbackForm: React.FC = () => {
         ru: {
             prefix: '+7',
             placeholder: '(926) 777-77-77',
+            mask: '(___) ___-__-__',
             rules: [
-                { required: true, message: 'Please input your phone number!' },
                 {
-                    pattern:
-                        /\([89][0-9]{2}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/m,
+                    required: true,
+                    message: 'Please input your phone number!'
+                },
+                {
+                    pattern: /\([0-9]{3}\)[\s][0-9]{3}[-][0-9]{2}[-][0-9]{2}$/,
                     message: 'number is not valid!'
                 },
                 { min: 1, message: 'must be minimum 1 characters' },
@@ -52,29 +54,19 @@ const FeedbackForm: React.FC = () => {
         du: {
             prefix: '+49',
             placeholder: '160-5556-417',
+            mask: '___-____-___',
             rules: [
-                { required: true, message: 'Please input your phone number!' },
                 {
-                    pattern: /([1-9][0-9]{2})[-][0-9]{4}[-][0-9]{3}$/m,
+                    required: true,
+                    message: 'Please input your phone number!'
+                },
+                {
+                    pattern: /([1-9][0-9]{2})[-][0-9]{4}[-][0-9]{3}$/,
                     message: 'number is not valid!'
                 },
                 { min: 1, message: 'must be minimum 1 characters' },
                 { max: 12, message: 'must be less than 12 characters' }
             ]
-        }
-    };
-
-    const onPhoneSelectChange = (phonePrefix: string): void => {
-        form.resetFields(['phone']);
-        switch (phonePrefix) {
-            case '+7':
-                setLang('ru');
-                break;
-            case '+49':
-                setLang('du');
-                break;
-            default:
-                setLang('ru');
         }
     };
 
@@ -96,6 +88,59 @@ const FeedbackForm: React.FC = () => {
             </Select>
         </Form.Item>
     );
+
+    // /. variables
+
+    const onInputPhoneChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ): void => {
+        const formattedPhoneNumber = getFormattedPhoneNumber(
+            e.target.value,
+            lang
+        );
+        form.setFieldsValue({
+            ['phone']: formattedPhoneNumber
+        });
+    };
+
+    const onFinish = (values: any): void => {
+        setLoadingStatus(true);
+
+        messageApi
+            .open({
+                type: 'loading',
+                content: 'Action in progress..',
+                duration: 2.8
+            })
+            .then(() => {
+                message.success('Delivery finished', 2.5);
+                setLoadingStatus(false);
+            });
+
+        form.resetFields();
+
+        console.log('Received values of form: ', {
+            name: values.name,
+            phone: `${values.prefix} ${values.phone}`,
+            email: values.email,
+            message: values.message || '',
+            sendingTime: new Date().toUTCString()
+        });
+    };
+
+    const onPhoneSelectChange = (phonePrefix: string): void => {
+        form.resetFields(['phone']);
+        switch (phonePrefix) {
+            case '+7':
+                setLang('ru');
+                break;
+            case '+49':
+                setLang('du');
+                break;
+            default:
+                setLang('ru');
+        }
+    };
 
     // /. functions
 
@@ -132,9 +177,10 @@ const FeedbackForm: React.FC = () => {
                 rules={phoneConfigurations[lang].rules}
             >
                 <Input
+                    placeholder={phoneConfigurations[lang].placeholder}
                     addonBefore={prefixSelector}
                     style={{ width: '100%' }}
-                    placeholder={phoneConfigurations[lang].placeholder}
+                    onChange={e => onInputPhoneChange(e)}
                 />
             </Form.Item>
 
@@ -177,9 +223,11 @@ const FeedbackForm: React.FC = () => {
                         htmlType="submit"
                         type="primary"
                         style={{ width: '100%' }}
+                        loading={isLoading}
                     >
                         Submit
                     </Button>
+                    <>{contextHolder}</>
                 </Col>
             </Row>
         </Form>

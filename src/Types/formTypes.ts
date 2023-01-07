@@ -6,6 +6,7 @@ export interface Iphone {
     [key: string]: {
         prefix: string;
         placeholder: string;
+        mask: string;
         rules: Irule[];
     };
 }
