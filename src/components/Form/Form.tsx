@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Button, Form, Input, Select, message } from 'antd';
 import { Col, Row } from 'antd/es/grid';
@@ -7,6 +7,8 @@ import { Iphone, Ilayout } from '../../Types/formTypes';
 
 import { getFormattedPhoneNumber } from '../../helpers/getFormattedPhoneNumber';
 
+import { fetchUserIP } from '../../app/api/fetchUserIP';
+
 import './form.scss';
 
 // /. imports
@@ -14,6 +16,10 @@ import './form.scss';
 const FeedbackForm: React.FC = () => {
     const [lang, setLang] = useState<string>('ru');
     const [isLoading, setLoadingStatus] = useState<boolean>(false);
+    const [userIP, setUserIP] = useState<string>('');
+    const [fetchIpErr, setFetchIpErr] = useState<null | string>(
+        'INITIAL ERROR'
+    );
 
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
@@ -91,43 +97,6 @@ const FeedbackForm: React.FC = () => {
 
     // /. variables
 
-    const onInputPhoneChange = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ): void => {
-        const formattedPhoneNumber = getFormattedPhoneNumber(
-            e.target.value,
-            lang
-        );
-        form.setFieldsValue({
-            ['phone']: formattedPhoneNumber
-        });
-    };
-
-    const onFinish = (values: any): void => {
-        setLoadingStatus(true);
-
-        messageApi
-            .open({
-                type: 'loading',
-                content: 'Action in progress..',
-                duration: 2.8
-            })
-            .then(() => {
-                message.success('Delivery finished', 2.5);
-                setLoadingStatus(false);
-            });
-
-        form.resetFields();
-
-        console.log('Received values of form: ', {
-            name: values.name,
-            phone: `${values.prefix} ${values.phone}`,
-            email: values.email,
-            message: values.message || '',
-            sendingTime: new Date().toUTCString()
-        });
-    };
-
     const onPhoneSelectChange = (phonePrefix: string): void => {
         form.resetFields(['phone']);
         switch (phonePrefix) {
@@ -142,7 +111,87 @@ const FeedbackForm: React.FC = () => {
         }
     };
 
+    const onInputPhoneChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ): void => {
+        const formattedPhoneNumber = getFormattedPhoneNumber(
+            e.target.value,
+            lang
+        );
+        form.setFieldsValue({
+            ['phone']: formattedPhoneNumber
+        });
+    };
+
+    const successAction = (values: any): void => {
+        console.log('successAction');
+
+        messageApi
+            .open({
+                type: 'loading',
+                content: 'Getting user information..',
+                duration: 2.8
+            })
+            .then(() => {
+                message.success('Successfully completed', 2.5);
+
+                setLoadingStatus(false);
+                form.resetFields();
+
+                console.log('Received values of form: ', {
+                    name: values.name,
+                    phone: `${values.prefix}${values.phone.replace(
+                        /[^\d]/g,
+                        ''
+                    )}`,
+                    email: values.email,
+                    message: values.message || '',
+                    sendingTime: new Date().toUTCString(),
+                    url: window.location.href,
+                    userIP: userIP
+                });
+            });
+    };
+
+    const errorAction = (): void => {
+        console.log('errorAction');
+        messageApi
+            .open({
+                type: 'error',
+                content: fetchIpErr,
+                duration: 2.8
+            })
+            .then(() => setLoadingStatus(false));
+    };
+
+    const onFormSubmit = (values: any): void => {
+        setLoadingStatus(true);
+        messageApi
+            .open({
+                type: 'loading',
+                content: 'Action in progress..',
+                duration: 2.8
+            })
+            .then(() => {
+                userIP ? successAction(values) : errorAction();
+            });
+    };
+
     // /. functions
+
+    useEffect(() => {
+        if (isLoading) {
+            fetchUserIP()
+                .then(({ ip }) => {
+                    setUserIP(ip);
+                })
+                .catch(message => {
+                    setFetchIpErr(message);
+                });
+        }
+    }, [isLoading]);
+
+    // /. effects
 
     return (
         <Form
@@ -150,7 +199,7 @@ const FeedbackForm: React.FC = () => {
             {...formItemLayout}
             form={form}
             name="feedback"
-            onFinish={onFinish}
+            onFinish={onFormSubmit}
             initialValues={{
                 prefix: phoneConfigurations[lang].prefix
             }}
@@ -224,6 +273,7 @@ const FeedbackForm: React.FC = () => {
                         type="primary"
                         style={{ width: '100%' }}
                         loading={isLoading}
+                        // onClick={() => setLoadingStatus(true)}
                     >
                         Submit
                     </Button>
