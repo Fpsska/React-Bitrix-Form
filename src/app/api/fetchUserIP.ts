@@ -13,6 +13,5 @@ export async function fetchUserIP(): Promise<any> {
         return data;
     } catch (err: any) {
         console.error(err.message);
-        return err.message;
     }
 }

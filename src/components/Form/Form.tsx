@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 import emailjs from '@emailjs/browser';
 
 import { Button, Form, Input, Select, message } from 'antd';
 
-import { Iphone, Ilayout } from '../../Types/formTypes';
+import { Iphone, IformData } from '../../Types/formTypes';
 
 import { getFormattedPhoneNumber } from '../../helpers/getFormattedPhoneNumber';
 
@@ -17,10 +17,6 @@ import './form.scss';
 const FeedbackForm: React.FC = () => {
     const [lang, setLang] = useState<string>('ru');
     const [isLoading, setLoadingStatus] = useState<boolean>(false);
-    const [userIP, setUserIP] = useState<string>('');
-    const [fetchIpErr, setFetchIpErr] = useState<null | string>(
-        'INITIAL ERROR'
-    );
 
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
@@ -30,17 +26,6 @@ const FeedbackForm: React.FC = () => {
     const { Option } = Select;
 
     // /. hooks
-
-    const formItemLayout: Ilayout = {
-        labelCol: {
-            xs: { span: 12 },
-            sm: { span: 5 }
-        },
-        wrapperCol: {
-            xs: { span: 12 },
-            sm: { span: 19 }
-        }
-    };
 
     const phoneConfigurations: Iphone = {
         ru: {
@@ -129,24 +114,24 @@ const FeedbackForm: React.FC = () => {
     const sendEmail = (): void => {
         const formRef = formWrapperRef.current.children[0] as HTMLFormElement;
 
-        emailjs
-            .sendForm(
-                String(process.env.REACT_APP_SERVICE_ID),
-                String(process.env.REACT_APP_TEMPLATE_ID),
-                formRef,
-                String(process.env.REACT_APP_PUBLIC_KEY)
-            )
-            .then(
-                result => {
-                    console.log('Result of emailjs:', result.text);
-                },
-                error => {
-                    console.log('Error of emailjs:', error.text);
-                }
-            );
+        // emailjs
+        //     .sendForm(
+        //         String(process.env.REACT_APP_SERVICE_ID),
+        //         String(process.env.REACT_APP_TEMPLATE_ID),
+        //         formRef,
+        //         String(process.env.REACT_APP_PUBLIC_KEY)
+        //     )
+        //     .then(
+        //         result => {
+        //             console.log('Result of emailjs:', result.text);
+        //         },
+        //         error => {
+        //             console.log('Error of emailjs:', error.text);
+        //         }
+        //     );
     };
 
-    const successAction = (values: any): void => {
+    const successAction = (values: IformData): void => {
         console.log('successAction');
 
         messageApi
@@ -155,9 +140,8 @@ const FeedbackForm: React.FC = () => {
                 content: 'Getting user information..',
                 duration: 2.8
             })
-            .then(() => sendEmail())
             .then(() => {
-                message.success('Successfully completed', 2.5);
+                message.success('Your request successfully send', 2.5);
 
                 setLoadingStatus(false);
                 form.resetFields();
@@ -172,50 +156,48 @@ const FeedbackForm: React.FC = () => {
                     message: values.message || '',
                     sendingTime: new Date().toUTCString(),
                     url: window.location.href,
-                    userIP: userIP
+                    userIP: values.userIP
                 });
-            });
+            })
+            .then(() => sendEmail());
     };
 
-    const errorAction = (): void => {
+    const errorAction = (errorMessage: string): void => {
         console.log('errorAction');
+
         messageApi
             .open({
-                type: 'error',
-                content: fetchIpErr,
+                type: 'loading',
+                content: 'Trying to receive user information..',
                 duration: 2.8
             })
-            .then(() => setLoadingStatus(false));
+            .then(() => {
+                message.error(errorMessage, 2.5);
+                setLoadingStatus(false);
+            });
     };
 
     const onFormSubmit = (values: any): void => {
         setLoadingStatus(true);
-        messageApi
-            .open({
-                type: 'loading',
-                content: 'Action in progress..',
-                duration: 2.8
+
+        fetchUserIP()
+            .then(({ ip }) => {
+                const extendedFormData = { ...values, userIP: ip };
+
+                messageApi
+                    .open({
+                        type: 'loading',
+                        content: 'Action in progress..',
+                        duration: 2.8
+                    })
+                    .then(() => successAction(extendedFormData));
             })
-            .then(() => {
-                userIP ? successAction(values) : errorAction();
+            .catch(({ message }) => {
+                errorAction(message);
             });
     };
 
     // /. functions
-
-    useEffect(() => {
-        if (isLoading) {
-            fetchUserIP()
-                .then(({ ip }) => {
-                    setUserIP(ip);
-                })
-                .catch(message => {
-                    setFetchIpErr(message);
-                });
-        }
-    }, [isLoading]);
-
-    // /. effects
 
     return (
         <div ref={formWrapperRef}>
@@ -227,7 +209,8 @@ const FeedbackForm: React.FC = () => {
                 initialValues={{
                     prefix: phoneConfigurations[lang].prefix
                 }}
-                {...formItemLayout}
+                wrapperCol={{ span: 24 }}
+                labelCol={{ span: 24 }}
                 scrollToFirstError
             >
                 <Form.Item
@@ -290,12 +273,9 @@ const FeedbackForm: React.FC = () => {
                     />
                 </Form.Item>
                 <Form.Item
-                    wrapperCol={{
-                        xs: { span: 24, offset: 0 },
-                        sm: { span: 8, offset: 10 }
-                    }}
+                    wrapperCol={{ sm: { span: 12, offset: 6 } }}
                     style={{
-                        margin: '0'
+                        margin: '0 auto'
                     }}
                 >
                     <Button

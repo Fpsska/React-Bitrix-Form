@@ -14,3 +14,14 @@ export interface Iphone {
 export interface Ilayout {
     [key: string]: { [key: string]: { [key: string]: number } };
 }
+
+export interface IformData {
+    name: string;
+    phone: string;
+    email: string;
+    message: string;
+    prefix: string;
+    url: string;
+    userIP: string;
+    sendingTime: string;
+}
