@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+import emailjs from '@emailjs/browser';
 
 import { Button, Form, Input, Select, message } from 'antd';
-import { Col, Row } from 'antd/es/grid';
 
 import { Iphone, Ilayout } from '../../Types/formTypes';
 
@@ -23,6 +24,8 @@ const FeedbackForm: React.FC = () => {
 
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
+
+    const formWrapperRef = useRef<HTMLDivElement>(null!);
 
     const { Option } = Select;
 
@@ -123,6 +126,26 @@ const FeedbackForm: React.FC = () => {
         });
     };
 
+    const sendEmail = (): void => {
+        const formRef = formWrapperRef.current.children[0] as HTMLFormElement;
+
+        emailjs
+            .sendForm(
+                String(process.env.REACT_APP_SERVICE_ID),
+                String(process.env.REACT_APP_TEMPLATE_ID),
+                formRef,
+                String(process.env.REACT_APP_PUBLIC_KEY)
+            )
+            .then(
+                result => {
+                    console.log('Result of emailjs:', result.text);
+                },
+                error => {
+                    console.log('Error of emailjs:', error.text);
+                }
+            );
+    };
+
     const successAction = (values: any): void => {
         console.log('successAction');
 
@@ -132,6 +155,7 @@ const FeedbackForm: React.FC = () => {
                 content: 'Getting user information..',
                 duration: 2.8
             })
+            .then(() => sendEmail())
             .then(() => {
                 message.success('Successfully completed', 2.5);
 
@@ -194,93 +218,98 @@ const FeedbackForm: React.FC = () => {
     // /. effects
 
     return (
-        <Form
-            className="form"
-            {...formItemLayout}
-            form={form}
-            name="feedback"
-            onFinish={onFormSubmit}
-            initialValues={{
-                prefix: phoneConfigurations[lang].prefix
-            }}
-            scrollToFirstError
-        >
-            <Form.Item
-                name="name"
-                label="Name"
-                tooltip="What do you want others to call you?"
-                rules={[
-                    {
-                        required: true,
-                        whitespace: true,
-                        message: 'Please input your name!'
-                    }
-                ]}
+        <div ref={formWrapperRef}>
+            <Form
+                className="form"
+                form={form}
+                name="feedback"
+                onFinish={onFormSubmit}
+                initialValues={{
+                    prefix: phoneConfigurations[lang].prefix
+                }}
+                {...formItemLayout}
+                scrollToFirstError
             >
-                <Input />
-            </Form.Item>
-
-            <Form.Item
-                name="phone"
-                label="Phone Number"
-                rules={phoneConfigurations[lang].rules}
-            >
-                <Input
-                    placeholder={phoneConfigurations[lang].placeholder}
-                    addonBefore={prefixSelector}
-                    style={{ width: '100%' }}
-                    onChange={e => onInputPhoneChange(e)}
-                />
-            </Form.Item>
-
-            <Form.Item
-                name="email"
-                label="E-mail"
-                rules={[
-                    {
-                        type: 'email',
-                        message: 'The input is not valid E-mail!'
-                    },
-                    {
-                        required: true,
-                        message: 'Please input your E-mail!'
-                    }
-                ]}
-            >
-                <Input />
-            </Form.Item>
-
-            <Form.Item
-                name="message"
-                label="Message"
-                rules={[
-                    { required: false, message: 'Please input your Message' }
-                ]}
-            >
-                <Input.TextArea
-                    showCount
-                    maxLength={100}
-                />
-            </Form.Item>
-
-            <Row>
-                <Col
-                    xs={{ span: 24, offset: 0 }}
-                    sm={{ span: 8, offset: 10 }}
+                <Form.Item
+                    name="name"
+                    label="Name"
+                    tooltip="What do you want others to call you?"
+                    rules={[
+                        {
+                            required: true,
+                            whitespace: true,
+                            message: 'Please input your name!'
+                        }
+                    ]}
+                >
+                    <Input name="name_field" />
+                </Form.Item>
+                <Form.Item
+                    name="phone"
+                    label="Phone Number"
+                    rules={phoneConfigurations[lang].rules}
+                >
+                    <Input
+                        name="phone_field"
+                        placeholder={phoneConfigurations[lang].placeholder}
+                        addonBefore={prefixSelector}
+                        style={{ width: '100%' }}
+                        onChange={e => onInputPhoneChange(e)}
+                    />
+                </Form.Item>
+                <Form.Item
+                    name="email"
+                    label="E-mail"
+                    rules={[
+                        {
+                            type: 'email',
+                            message: 'The input is not valid E-mail!'
+                        },
+                        {
+                            required: true,
+                            message: 'Please input your E-mail!'
+                        }
+                    ]}
+                >
+                    <Input name="email_field" />
+                </Form.Item>
+                <Form.Item
+                    name="message"
+                    label="Message"
+                    rules={[
+                        {
+                            required: false,
+                            message: 'Please input your Message'
+                        }
+                    ]}
+                >
+                    <Input.TextArea
+                        name="message_field"
+                        showCount
+                        maxLength={100}
+                    />
+                </Form.Item>
+                <Form.Item
+                    wrapperCol={{
+                        xs: { span: 24, offset: 0 },
+                        sm: { span: 8, offset: 10 }
+                    }}
+                    style={{
+                        margin: '0'
+                    }}
                 >
                     <Button
                         htmlType="submit"
                         type="primary"
                         style={{ width: '100%' }}
                         loading={isLoading}
-                        // onClick={() => setLoadingStatus(true)}
                     >
                         Submit
                     </Button>
                     <>{contextHolder}</>
-                </Col>
-            </Row>
-        </Form>
+                </Form.Item>
+            </Form>
+        </div>
     );
 };
 
