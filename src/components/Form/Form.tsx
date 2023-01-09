@@ -133,12 +133,14 @@ const FeedbackForm: React.FC = () => {
             .then(
                 result => {
                     console.log('Result of emailjs:', result.text);
+                    setTimeout(() => {
+                        dispatch(switchFormSubmittedStatus(true));
+                    }, 600);
                 },
                 error => {
                     console.log('Error of emailjs:', error.text);
                 }
-            )
-            .then(() => dispatch(switchFormSubmittedStatus(true)));
+            );
     };
 
     const successAction = (values: IformData): void => {
@@ -167,10 +169,12 @@ const FeedbackForm: React.FC = () => {
                 };
                 dispatch(setFormData(outputFormData));
 
+                sendEmail();
+            })
+            .then(() => {
                 setLoadingStatus(false);
                 form.resetFields();
-            })
-            .then(() => sendEmail());
+            });
     };
 
     const errorAction = (errorMessage: string): void => {
