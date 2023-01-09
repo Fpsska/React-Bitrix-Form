@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/React-Bitrix-Form/static/css/main.2cc5b6a5.css",
-    "main.js": "/React-Bitrix-Form/static/js/main.c3f5c7ac.js",
+    "main.js": "/React-Bitrix-Form/static/js/main.c8908e94.js",
     "static/js/787.79b4530e.chunk.js": "/React-Bitrix-Form/static/js/787.79b4530e.chunk.js",
     "index.html": "/React-Bitrix-Form/index.html",
     "main.2cc5b6a5.css.map": "/React-Bitrix-Form/static/css/main.2cc5b6a5.css.map",
-    "main.c3f5c7ac.js.map": "/React-Bitrix-Form/static/js/main.c3f5c7ac.js.map",
+    "main.c8908e94.js.map": "/React-Bitrix-Form/static/js/main.c8908e94.js.map",
     "787.79b4530e.chunk.js.map": "/React-Bitrix-Form/static/js/787.79b4530e.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2cc5b6a5.css",
-    "static/js/main.c3f5c7ac.js"
+    "static/js/main.c8908e94.js"
   ]
 }
