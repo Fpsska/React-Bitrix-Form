@@ -20,8 +20,8 @@ export interface IformData {
     phone: string;
     email: string;
     message: string;
-    prefix: string;
     url: string;
     userIP: string;
     sendingTime: string;
+    prefix?: string;
 }

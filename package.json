@@ -3,6 +3,7 @@
   "author": "Fpsska",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://Fpsska.github.io/React-Bitrix-Form",
   "dependencies": {
     "@emailjs/browser": "^3.10.0",
     "@reduxjs/toolkit": "^1.9.1",

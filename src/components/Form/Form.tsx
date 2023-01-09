@@ -4,6 +4,13 @@ import emailjs from '@emailjs/browser';
 
 import { Button, Form, Input, Select, message } from 'antd';
 
+import { useAppDispatch } from '../../app/hooks';
+
+import {
+    setFormData,
+    switchFormSubmittedStatus
+} from '../../app/slices/formSlice';
+
 import { Iphone, IformData } from '../../Types/formTypes';
 
 import { getFormattedPhoneNumber } from '../../helpers/getFormattedPhoneNumber';
@@ -24,6 +31,8 @@ const FeedbackForm: React.FC = () => {
     const formWrapperRef = useRef<HTMLDivElement>(null!);
 
     const { Option } = Select;
+
+    const dispatch = useAppDispatch();
 
     // /. hooks
 
@@ -114,21 +123,22 @@ const FeedbackForm: React.FC = () => {
     const sendEmail = (): void => {
         const formRef = formWrapperRef.current.children[0] as HTMLFormElement;
 
-        // emailjs
-        //     .sendForm(
-        //         String(process.env.REACT_APP_SERVICE_ID),
-        //         String(process.env.REACT_APP_TEMPLATE_ID),
-        //         formRef,
-        //         String(process.env.REACT_APP_PUBLIC_KEY)
-        //     )
-        //     .then(
-        //         result => {
-        //             console.log('Result of emailjs:', result.text);
-        //         },
-        //         error => {
-        //             console.log('Error of emailjs:', error.text);
-        //         }
-        //     );
+        emailjs
+            .sendForm(
+                String(process.env.REACT_APP_SERVICE_ID),
+                String(process.env.REACT_APP_TEMPLATE_ID),
+                formRef,
+                String(process.env.REACT_APP_PUBLIC_KEY)
+            )
+            .then(
+                result => {
+                    console.log('Result of emailjs:', result.text);
+                },
+                error => {
+                    console.log('Error of emailjs:', error.text);
+                }
+            )
+            .then(() => dispatch(switchFormSubmittedStatus(true)));
     };
 
     const successAction = (values: IformData): void => {
@@ -143,10 +153,7 @@ const FeedbackForm: React.FC = () => {
             .then(() => {
                 message.success('Your request successfully send', 2.5);
 
-                setLoadingStatus(false);
-                form.resetFields();
-
-                console.log('Received values of form: ', {
+                const outputFormData = {
                     name: values.name,
                     phone: `${values.prefix}${values.phone.replace(
                         /[^\d]/g,
@@ -157,7 +164,11 @@ const FeedbackForm: React.FC = () => {
                     sendingTime: new Date().toUTCString(),
                     url: window.location.href,
                     userIP: values.userIP
-                });
+                };
+                dispatch(setFormData(outputFormData));
+
+                setLoadingStatus(false);
+                form.resetFields();
             })
             .then(() => sendEmail());
     };
@@ -216,7 +227,6 @@ const FeedbackForm: React.FC = () => {
                 <Form.Item
                     name="name"
                     label="Name"
-                    tooltip="What do you want others to call you?"
                     rules={[
                         {
                             required: true,
@@ -243,6 +253,7 @@ const FeedbackForm: React.FC = () => {
                 <Form.Item
                     name="email"
                     label="E-mail"
+                    tooltip="Your E-mail address"
                     rules={[
                         {
                             type: 'email',
@@ -259,6 +270,7 @@ const FeedbackForm: React.FC = () => {
                 <Form.Item
                     name="message"
                     label="Message"
+                    tooltip="Type your question here"
                     rules={[
                         {
                             required: false,
